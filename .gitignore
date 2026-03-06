@@ -1,0 +1,5 @@
+credentials.json
+token.pickle
+*.pickle
+test_output/
+output_videos/
