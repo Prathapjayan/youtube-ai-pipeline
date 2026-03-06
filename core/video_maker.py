@@ -207,13 +207,16 @@ def create_video(script: str, channel: str,
                 text_lines.append(line)
 
             for j, tl in enumerate(text_lines[:2]):
-                draw.text((30, box_y + 20 + j * 55), tl,
+                tl_display = tl.encode("ascii", "ignore").decode("ascii") if any(ord(c) > 127 for c in tl) else tl
+            draw.text((30, box_y + 20 + j * 55), tl_display,
                          font=font, fill=colors["text"])
 
             final_img_path = f"temp_frames/final_frame_{i}.jpg"
             img.save(final_img_path)
 
             clip = ImageClip(final_img_path).with_duration(scene_duration)
+            # Zoom in effect
+            clip = clip.resized(lambda t: 1 + 0.02*t)
             clips.append(clip)
 
         # Combine all clips

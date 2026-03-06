@@ -82,7 +82,25 @@ def produce_video(channel: str) -> bool:
     thumb_path = f"{channel_dir}/{timestamp}_thumb.jpg"
     create_thumbnail(title, channel, thumb_path)
 
-    # Step 5: Save metadata
+    # Step 5: Upload to YouTube
+    print("📤 Step 5: Uploading to YouTube...")
+    from core.uploader import upload_video, set_thumbnail
+    result = upload_video(
+        video_path=video_path,
+        title=data["title"],
+        description=data["description"],
+        tags=data["tags"],
+        privacy="public"
+    )
+    if result["success"]:
+        set_thumbnail(result["video_id"], thumb_path)
+        send_telegram(f"""🎉 *Video Uploadedyoutube-ai-pipeline
+📺 {channel}
+🎯 {topic}
+🔗 {result["video_url"]}""")
+        print(f"✅ Live: {result['video_url']}")
+    
+    # Step 6: Save metadata
     meta = {
         "channel":    channel,
         "title":      title,
