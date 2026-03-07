@@ -1,37 +1,55 @@
 #!/usr/bin/env python3
 """
-Voiceover Generator
-Tamil + English using gTTS (100% FREE)
+Voiceover Generator with Background Music
 """
-
-import os
 from gtts import gTTS
+import os
+import subprocess
+from core.music_generator import generate_background_music
 
-CHANNEL_LANGUAGE = {
-    "ai_tech_tamil":  {"lang": "ta", "tld": "co.in"},
-    "motivation":     {"lang": "ta", "tld": "co.in"},
-    "facts_finance":  {"lang": "ta", "tld": "co.in"},
-    "eggy_world":     {"lang": "en", "tld": "co.in"},
-}
-
-def generate_voiceover(text: str, channel: str, output_path: str) -> bool:
-    """Generate voiceover audio from text."""
+def generate_voiceover(script: str, channel: str, output_path: str) -> bool:
     try:
-        lang_config = CHANNEL_LANGUAGE.get(channel, {"lang": "ta", "tld": "co.in"})
+        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
         
-        # Clean text for TTS
-        text = text.replace("*", "").replace("#", "").strip()
+        # Language per channel
+        lang_map = {
+            "ai_tech_tamil": "ta",
+            "facts_finance": "ta", 
+            "motivation":    "ta",
+            "eggy_world":    "en"
+        }
+        lang = lang_map.get(channel, "ta")
         
-        tts = gTTS(
-            text=text,
-            lang=lang_config["lang"],
-            tld=lang_config["tld"],
-            slow=False
-        )
+        # Generate voice
+        voice_path = output_path.replace(".mp3", "_voice_only.mp3")
+        tts = gTTS(text=script, lang=lang, slow=False)
+        tts.save(voice_path)
         
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        tts.save(output_path)
-        print(f"✅ Voiceover saved: {output_path}")
+        # Generate background music
+        music_path = output_path.replace(".mp3", "_music.wav")
+        generate_background_music(60, channel, music_path)
+        
+        # Mix voice + music using ffmpeg
+        result = subprocess.run([
+            "ffmpeg", "-y",
+            "-i", voice_path,
+            "-i", music_path,
+            "-filter_complex", "[0:a]volume=1.0[voice];[1:a]volume=0.15[music];[voice][music]amix=inputs=2:duration=first",
+            "-codec:a", "libmp3lame",
+            "-q:a", "2",
+            output_path
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            # Cleanup temp files
+            os.remove(voice_path)
+            os.remove(music_path)
+            print(f"✅ Voiceover + music saved: {output_path}")
+        else:
+            # Fallback - use voice only
+            os.rename(voice_path, output_path)
+            print(f"✅ Voiceover saved (no music): {output_path}")
+        
         return True
         
     except Exception as e:
@@ -39,8 +57,5 @@ def generate_voiceover(text: str, channel: str, output_path: str) -> bool:
         return False
 
 if __name__ == "__main__":
-    # Test voiceover
-    test_text = "வணக்கம் நண்பர்களே! இன்று AI பற்றி பேசப் போகிறோம்!"
     os.makedirs("test_output", exist_ok=True)
-    generate_voiceover(test_text, "ai_tech_tamil", "test_output/test_voice.mp3")
-    print("Test complete! Check test_output/test_voice.mp3")
+    generate_voiceover("Hello this is a test", "ai_tech_tamil", "test_output/test_voice.mp3")

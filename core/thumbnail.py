@@ -66,7 +66,7 @@ def create_thumbnail(title: str, channel: str, output_path: str) -> bool:
         # Load fonts
         try:
             font_title = ImageFont.truetype(
-                "/usr/share/fonts/truetype/lohit-tamil/Lohit-Tamil.ttf", 72)
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 65)
             font_sub = ImageFont.truetype(
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
             font_emoji = ImageFont.truetype(

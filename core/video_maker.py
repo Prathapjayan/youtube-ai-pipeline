@@ -29,7 +29,7 @@ CHANNEL_COLORS = {
 }
 
 VIDEO_WIDTH  = 1920
-VIDEO_HEIGHT = 1080
+VIDEO_HEIGHT = 1920
 FPS = 24
 
 
@@ -175,6 +175,7 @@ def create_video(script: str, channel: str,
 
             # Resize image to video dimensions
             img = Image.open(img_path).convert("RGB")
+            # Fill vertical screen completely - no black bars
             img = img.resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.LANCZOS)
 
             # Overlay text on image
